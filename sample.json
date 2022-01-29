@@ -1,0 +1,14 @@
+{
+  "Message": "You do not have access to view one or more of the selected advisor(s). Please check your selections and try again.",
+  "MessageTemplate": "You do not have access to view one or more of the selected advisor(s). Please check your selections and try again.",
+  "level": "error",
+  "Exception": {
+    "Type": "System.Exception",
+    "Message": "You do not have access to view one or more of the selected advisor(s). Please check your selections and try again.",
+    "StackTrace": ""
+  },
+  "LineNumber": 280,
+  "MethodName": "Void .ctor()",
+  "SourceContext": "SitefinityWebApp.Data.MyOffice.InvestmentsModule",
+  "CorrelationId": "aadbf429-76cb-42b8-800d-fecfa60d522f"
+}
