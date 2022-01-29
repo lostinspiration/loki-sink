@@ -6,11 +6,13 @@ use serde::Serialize;
 use std::error::Error;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Mutex, RwLock};
+use std::thread;
 use std::{collections::HashMap, sync::Arc};
 
 pub use log;
 
 pub static PROPERTY_BAG: Lazy<PropertyBag> = Lazy::new(|| PropertyBag::new());
+static BUFFER_FLUSH_LIMIT: usize = 1000;
 
 /// Convenience macro for adding a label to the logging stack
 #[macro_export]
@@ -27,9 +29,13 @@ pub fn init(url: impl AsRef<str>, global_labels: Option<HashMap<&'static str, &'
 	let logger = Box::new(LokiSink::new(url, global_labels));
 	log::set_boxed_logger(logger)
 		.map(|_| {
-			log::set_max_level(log::LevelFilter::Trace);
+			log::set_max_level(log::LevelFilter::Debug);
 		})
 		.expect("failed to set logger");
+
+	// thread::spawn(|| {
+		
+	// });
 }
 
 /// Property bag that hold the label stack used to enrich the logs written to loki
@@ -130,8 +136,8 @@ impl LokiSink {
 
 		add_property!("Message", &message);
 		add_property!("LineNumber", &record.line());
-		add_property!("MethodName", &record.target());
-		add_property!("SourceContext", &record.file());
+		add_property!("Target", &record.target());
+		add_property!("File", &record.file());
 		add_property!("level", &record.level().to_string().to_ascii_lowercase());
 
 		let message_json = serde_json::to_string(&PROPERTY_BAG.labels.read().unwrap().clone()).unwrap();
@@ -161,6 +167,9 @@ impl Log for LokiSink {
 			return;
 		}
 
+		// ureq and its dependencies use the log facade and as such overflow the call stack
+		// just block everything from its root for the time being.
+		// XXX: not happy about this but it works for now
 		if record.target().contains("ureq") {
 			return;
 		}
@@ -169,17 +178,27 @@ impl Log for LokiSink {
 			eprintln!("{:?}", e);
 		}
 
-		if self.buffer.read().unwrap().len() >= 5 {
+		// limit is hit, let's try to flush the logs to the server
+		if self.buffer.read().unwrap().len() >= BUFFER_FLUSH_LIMIT {
 			self.flush();
 		}
 	}
 
 	fn flush(&self) {
-		let mut req = self.buffer.write().unwrap();
-		let payload = LokiRequest{
+		let mut req = match self.buffer.try_write() {
+			Ok(r) => r,
+			// if we can't get a lock, well just try again next time flush is called
+			Err(_) => return
+		};
+
+		let payload = LokiRequest {
 			streams: (*req).drain(..).map(|a| a.streams).flatten().collect() 
 		};
-		ureq::post("http://localhost:3100/loki/api/v1/push").send_json(payload).expect("failed to post");
+
+		// for now just swallow the error and print to stderr
+		if let Err(e) = ureq::post(&self.url).send_json(payload) {
+			eprintln!("{:?}", e);
+		}
 	}
 }
 
