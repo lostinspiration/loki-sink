@@ -3,7 +3,7 @@ use serde::Serialize;
 use std::{collections::HashMap, sync::RwLock};
 
 /// Property bag
-pub static PROPERTY_BAG: Lazy<PropertyBag> = Lazy::new(|| PropertyBag::new());
+pub static PROPERTY_BAG: Lazy<PropertyBag> = Lazy::new(PropertyBag::new);
 type LabelStack = RwLock<HashMap<String, serde_json::Value>>;
 
 /// Property bag that hold the label stack used to enrich the logs written to loki

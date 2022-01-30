@@ -1,4 +1,5 @@
 #![deny(missing_docs, unsafe_code)]
+#![allow(clippy::tabs_in_doc_comments)]
 //! An opinionated [Grafana loki](https://grafana.com/oss/loki/) logger for the [`log`](https://crates.io/crates/log) facade.
 
 mod label_stack;
