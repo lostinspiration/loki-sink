@@ -2,7 +2,7 @@
 #![allow(clippy::tabs_in_doc_comments)]
 //! An opinionated [Grafana loki](https://grafana.com/oss/loki/) logger for the [`log`](https://crates.io/crates/log) facade.
 
-mod label_stack;
+mod property_bag;
 mod sink;
 
 use log::LevelFilter;
@@ -10,17 +10,30 @@ use sink::{LokiLabels, LokiSink};
 use std::thread;
 use std::time::Duration;
 
-// re-export `PROPERTY_BAG` at crate level for macro and hand hacking push properties
-pub use crate::label_stack::PROPERTY_BAG;
-
-// re-export log so consumers don't need to take a direct dependency
+pub use crate::property_bag::PROPERTY_BAG;
 pub use log;
 
-/// Convenience macro for adding a label to the logging stack
+/// Convenience macro for adding a label to the property bag
 #[macro_export]
-macro_rules! add_property {
+macro_rules! prop {
 	($name:expr, $object:expr) => {
 		let _guard = $crate::PROPERTY_BAG.push($name, $object);
+	};
+}
+
+/// Convenience macro for adding `CorrelationId` to the property bag
+#[macro_export]
+macro_rules! correlation_id {
+	($object:expr) => {
+		let _guard = $crate::PROPERTY_BAG.push("CorrelationId", $object);
+	};
+}
+
+/// Convenience macro for adding `InstanceId` to the property bag
+#[macro_export]
+macro_rules! instance_id {
+	($object:expr) => {
+		let _guard = $crate::PROPERTY_BAG.push("InstanceId", $object);
 	};
 }
 
@@ -64,7 +77,7 @@ mod tests {
 
 		init_with_labels("http://localhost:3100/loki/api/v1/push", log::LevelFilter::Debug, Some(initial_labels));
 		
-		add_property!("CorrelationId", &12345);
+		prop!("CorrelationId", &12345);
 		info!("Test");
 	}
 }

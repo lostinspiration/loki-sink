@@ -1,4 +1,4 @@
-use crate::{add_property, PROPERTY_BAG};
+use crate::{prop, PROPERTY_BAG};
 use log::Log;
 use serde::Serialize;
 use std::{
@@ -98,11 +98,11 @@ impl Log for LokiSink {
 		let message = format!("{:?}", record.args());
 
 		// add standard set of properties to be logged
-		add_property!("Message", &message);
-		add_property!("LineNumber", &record.line());
-		add_property!("Target", &record.target());
-		add_property!("File", &record.file());
-		add_property!("level", &record.level().to_string().to_ascii_lowercase());
+		prop!("Message", &message);
+		prop!("LineNumber", &record.line());
+		prop!("Target", &record.target());
+		prop!("File", &record.file());
+		prop!("level", &record.level().to_string().to_ascii_lowercase());
 
 		let message_json = PROPERTY_BAG.as_json();
 		let span = [(time, message_json)].to_vec();
@@ -136,7 +136,7 @@ impl Log for LokiSink {
 			streams: (*req).drain(..batch_size).collect(),
 		};
 
-		// we are done with the `RwLock`. drop it so that any logging in ureq and its dependencies
+		// we are done with the RwLock. drop it so that any logging in ureq and its dependencies
 		// will not cause deadlocks
 		drop(req);
 
