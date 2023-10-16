@@ -7,8 +7,8 @@ mod sink;
 
 use log::LevelFilter;
 use sink::{LokiLabels, LokiSink};
-use std::thread;
-use std::time::Duration;
+// use std::thread;
+// use std::time::Duration;
 
 pub use crate::property_bag::PROPERTY_BAG;
 pub use log;
@@ -44,12 +44,12 @@ fn init_inner(url: impl AsRef<str>, max_log_level: LevelFilter, labels: LokiLabe
 		})
 		.expect("failed to set logger");
 
-	thread::spawn(|| {
-		loop {
-			thread::sleep(Duration::from_secs(1));
-			log::logger().flush();
-		}
-	});
+	// thread::spawn(|| {
+	// 	loop {
+	// 		thread::sleep(Duration::from_secs(1));
+	// 		log::logger().flush();
+	// 	}
+	// });
 }
 
 /// Initialize a new loki logger sink with a given level
