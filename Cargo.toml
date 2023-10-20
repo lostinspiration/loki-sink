@@ -7,7 +7,6 @@ version = "0.1.1"
 
 [dependencies]
 log = {version = "0.4.20", features = ["std"]}
-once_cell = {version = "1.18.0"}
 serde = {version = "1.0.189", features = ["derive"]}
 serde_json = {version = "1.0.107"}
 ureq = {version = "2.8.0", features = ["json"]}

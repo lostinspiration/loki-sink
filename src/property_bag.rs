@@ -1,9 +1,8 @@
-use once_cell::sync::Lazy;
 use serde::Serialize;
-use std::{collections::HashMap, sync::RwLock};
+use std::{collections::HashMap, sync::{RwLock, OnceLock}};
 
 /// Property bag
-pub static PROPERTY_BAG: Lazy<PropertyBag> = Lazy::new(PropertyBag::new);
+pub static PROPERTY_BAG: OnceLock<PropertyBag> = OnceLock::new();
 type PropertyStack = RwLock<HashMap<String, serde_json::Value>>;
 
 /// Property bag that hold the `PropertyStack` used to enrich the logs written to loki
@@ -14,7 +13,7 @@ pub struct PropertyBag {
 
 impl PropertyBag {
 	/// Initializes a new `PropertyBag`
-	fn new() -> Self {
+	pub(crate) fn new() -> Self {
 		PropertyBag {
 			props: RwLock::new(HashMap::new()),
 		}

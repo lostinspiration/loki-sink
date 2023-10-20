@@ -104,7 +104,7 @@ impl Log for LokiSink {
 		prop!("File", &record.file());
 		prop!("level", &record.level().to_string().to_ascii_lowercase());
 
-		let message_json = PROPERTY_BAG.as_json();
+		let message_json = PROPERTY_BAG.get().unwrap().as_json();
 		let span = [(time, message_json)].to_vec();
 
 		let req = LokiStream {
@@ -143,8 +143,8 @@ impl Log for LokiSink {
 		// for now just swallow and print to stderr
 		// this can sometimes cause things to write to stderr if the program/thread execution
 		// stops in the middle of making the call
-		if let Err(e) = ureq::post(&self.url).send_json(payload) {
-			eprintln!("{:?}", e);
+		if let Err(_e) = ureq::post(&self.url).send_json(payload) {
+			// eprintln!("{:?}", e);
 		}
 	}
 }

@@ -7,8 +7,6 @@ mod sink;
 
 use log::LevelFilter;
 use sink::{LokiLabels, LokiSink};
-// use std::thread;
-// use std::time::Duration;
 
 pub use crate::property_bag::PROPERTY_BAG;
 pub use log;
@@ -17,7 +15,7 @@ pub use log;
 #[macro_export]
 macro_rules! prop {
 	($name:expr, $object:expr) => {
-		let _guard = $crate::PROPERTY_BAG.push($name, $object);
+		let _guard = $crate::PROPERTY_BAG.get().expect("initialized property bag").push($name, $object);
 	};
 }
 
@@ -25,7 +23,7 @@ macro_rules! prop {
 #[macro_export]
 macro_rules! correlation_id {
 	($object:expr) => {
-		let _guard = $crate::PROPERTY_BAG.push("CorrelationId", $object);
+		let _guard = $crate::PROPERTY_BAG.get().expect("initialized property bag").push("CorrelationId", $object);
 	};
 }
 
@@ -33,23 +31,17 @@ macro_rules! correlation_id {
 #[macro_export]
 macro_rules! instance_id {
 	($object:expr) => {
-		let _guard = $crate::PROPERTY_BAG.push("InstanceId", $object);
+		let _guard = $crate::PROPERTY_BAG.get().expect("initialized property bag").push("InstanceId", $object);
 	};
 }
 
 fn init_inner(url: impl AsRef<str>, max_log_level: LevelFilter, labels: LokiLabels) {
+  property_bag::PROPERTY_BAG.get_or_init(|| property_bag::PropertyBag::new());
 	log::set_boxed_logger(Box::new(LokiSink::new(url, labels)))
 		.map(|_| {
 			log::set_max_level(max_log_level);
 		})
 		.expect("failed to set logger");
-
-	// thread::spawn(|| {
-	// 	loop {
-	// 		thread::sleep(Duration::from_secs(1));
-	// 		log::logger().flush();
-	// 	}
-	// });
 }
 
 /// Initialize a new loki logger sink with a given level
